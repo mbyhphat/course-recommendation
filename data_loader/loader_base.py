@@ -20,6 +20,7 @@ class DataLoaderBase(object):
         self.train_file = os.path.join(self.data_dir, 'train.txt')
         self.test_file = os.path.join(self.data_dir, 'test.txt')
         self.kg_file = os.path.join(self.data_dir, "kg_final.txt")
+        self.user_file = os.path.join(self.data_dir, "user_list.txt")
 
         self.cf_train_data, self.train_user_dict = self.load_cf(self.train_file)
         self.cf_test_data, self.test_user_dict = self.load_cf(self.test_file)
@@ -64,6 +65,11 @@ class DataLoaderBase(object):
         kg_data = pd.read_csv(filename, sep=' ', names=['h', 'r', 't'], engine='python')
         kg_data = kg_data.drop_duplicates()
         return kg_data
+    
+    def load_user_info(self, filename):
+        user_data = pd.read_csv(filename, sep=' ')
+        user_data = user_data.drop_duplicates()
+        return user_data
 
 
     def sample_pos_items_for_u(self, user_dict, user_id, n_sample_pos_items):
@@ -97,7 +103,7 @@ class DataLoaderBase(object):
 
 
     def generate_cf_batch(self, user_dict, batch_size):
-        exist_users = user_dict.keys()
+        exist_users = list(user_dict.keys())
         if batch_size <= len(exist_users):
             batch_user = random.sample(exist_users, batch_size)
         else:
@@ -172,7 +178,7 @@ class DataLoaderBase(object):
 
     def load_pretrained_data(self):
         pre_model = 'mf'
-        pretrain_path = '%s/%s/%s.npz' % (self.pretrain_embedding_dir, self.data_name, pre_model)
+        pretrain_path = '%s/%s.npz' % (self.pretrain_embedding_dir, pre_model)
         pretrain_data = np.load(pretrain_path)
         self.user_pre_embed = pretrain_data['user_embed']
         self.item_pre_embed = pretrain_data['item_embed']
@@ -181,5 +187,4 @@ class DataLoaderBase(object):
         assert self.item_pre_embed.shape[0] == self.n_items
         assert self.user_pre_embed.shape[1] == self.args.embed_dim
         assert self.item_pre_embed.shape[1] == self.args.embed_dim
-
 
