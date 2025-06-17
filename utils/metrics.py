@@ -115,24 +115,53 @@ def logloss(ground_truth, prediction):
     return logloss
 
 
-def calc_metrics_at_k(cf_scores, train_user_dict, test_user_dict, user_ids, item_ids, Ks):
-    """
-    cf_scores: (n_users, n_items)
-    """
-    test_pos_item_binary = np.zeros([len(user_ids), len(item_ids)], dtype=np.float32)
-    for idx, u in enumerate(user_ids):
-        train_pos_item_list = train_user_dict[u]
-        test_pos_item_list = test_user_dict[u]
-        cf_scores[idx][train_pos_item_list] = -np.inf
-        test_pos_item_binary[idx][test_pos_item_list] = 1
+def calc_metrics_at_k(cf_scores, train_user_dict, test_user_dict, user_ids, item_ids, Ks, num_negatives=100):
+    '''
+    Calculate precision, recall, and NDCG at K for each user with negative sampling.
+    Negative sampling selects 100 items that are neither the ground truth item nor in the user's train set.
 
-    try:
-        _, rank_indices = torch.sort(cf_scores.cuda(), descending=True)    # try to speed up the sorting process
-    except:
-        _, rank_indices = torch.sort(cf_scores, descending=True)
-    rank_indices = rank_indices.cpu()
+    cf_scores: (n_users, n_items)
+    '''
 
     binary_hit = []
+    temp_cf_scores = []
+    test_indices = []
+
+    test_pos_item_binary = np.concatenate((
+        np.ones((len(user_ids), 1)),
+        np.zeros((len(user_ids), num_negatives))
+    ), axis=1)
+
+
+    print('Hello')
+    for idx, user in enumerate(user_ids):
+        # Ground truth items for the user
+        test_item = set(test_user_dict[user])
+        
+        # Items in the training set to be excluded
+        train_items = set(train_user_dict[user])
+        
+        # Negative samples: items not in the test items and not in the train items
+        possible_negatives = [item for item in item_ids if item not in train_items and item not in test_item]
+        negative_samples = np.random.choice(possible_negatives, num_negatives, replace=False)
+        
+        # Selected items for testing: ground truth + negative samples
+        test_set = list(test_item) + list(negative_samples)
+        # test_indices.append(test_set)
+
+        # Get the corresponding scores of these items from the cf_scores matrix
+        temp_cf_scores.append(cf_scores[idx][test_set].tolist())
+        
+    try:
+        _, rank_indices = torch.sort(torch.LongTensor(temp_cf_scores).cuda(), descending=True)    # try to speed up the sorting process
+    except:
+        _, rank_indices = torch.sort(torch.LongTensor(temp_cf_scores), descending=True)
+
+    rank_indices = rank_indices.cpu()
+
+    # binary_hit = [] # shape (n_users, num_negatives+1)
+    # test_indices = np.asarray(test_indices)
+    
     for i in range(len(user_ids)):
         binary_hit.append(test_pos_item_binary[i][rank_indices[i]])
     binary_hit = np.array(binary_hit, dtype=np.float32)
@@ -143,6 +172,5 @@ def calc_metrics_at_k(cf_scores, train_user_dict, test_user_dict, user_ids, item
         metrics_dict[k]['precision'] = precision_at_k_batch(binary_hit, k)
         metrics_dict[k]['recall']    = recall_at_k_batch(binary_hit, k)
         metrics_dict[k]['ndcg']      = ndcg_at_k_batch(binary_hit, k)
+
     return metrics_dict
-
-
