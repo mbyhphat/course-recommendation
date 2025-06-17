@@ -19,7 +19,7 @@ class DataLoaderBase(object):
         self.data_dir = os.path.join(args.data_dir, args.data_name)
         self.train_file = os.path.join(self.data_dir, "train.txt")
         self.test_file = os.path.join(self.data_dir, "val.txt")
-        self.kg_file = os.path.join(self.data_dir, "kg_final.txt")
+        self.kg_file = os.path.join(self.data_dir, "kg_final.csv")
         self.user_file = os.path.join(self.data_dir, "user_list.csv")
 
         self.cf_train_data, self.train_user_dict = self.load_cf(self.train_file)
@@ -59,7 +59,7 @@ class DataLoaderBase(object):
         self.n_cf_test = len(self.cf_test_data[0])
 
     def load_kg(self, filename):
-        kg_data = pd.read_csv(filename, sep=" ", names=["h", "r", "t"], engine="python")
+        kg_data = pd.read_csv(filename, sep=",", engine="python")
         kg_data = kg_data.drop_duplicates()
         return kg_data
 
