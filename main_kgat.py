@@ -47,7 +47,7 @@ def evaluate(model, dataloader, Ks, device):
                 )  # (n_batch_users, n_items)
 
             batch_scores = batch_scores.cpu()
-            batch_metrics = calc_metrics_at_k_with_negative_sampling(
+            batch_metrics = calc_metrics_at_k(
                 batch_scores,
                 train_user_dict,
                 test_user_dict,
