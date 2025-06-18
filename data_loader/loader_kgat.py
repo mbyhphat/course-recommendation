@@ -105,7 +105,7 @@ class DataLoaderKGAT(DataLoaderBase):
 
     def convert_coo2tensor(self, coo):
         values = coo.data
-        indices = np.vstack((coo.row + 1, coo.col + 1))
+        indices = np.vstack((coo.row, coo.col))
 
         i = torch.LongTensor(indices)
         v = torch.FloatTensor(values)
@@ -120,7 +120,7 @@ class DataLoaderKGAT(DataLoaderBase):
             vals = [1] * len(rows)
             adj = sp.coo_matrix(
                 (vals, (rows, cols)),
-                shape=(self.n_users_entities + 1, self.n_users_entities + 1),
+                shape=(self.n_users_entities, self.n_users_entities),
             )
             self.adjacency_dict[r] = adj
 

@@ -53,8 +53,8 @@ class DataLoaderBase(object):
         return (user, item), user_dict
 
     def statistic_cf(self):
-        self.n_users = max(max(self.cf_train_data[0]), max(self.cf_test_data[0]))
-        self.n_items = max(max(self.cf_train_data[1]), max(self.cf_test_data[1]))
+        self.n_users = max(max(self.cf_train_data[0]), max(self.cf_test_data[0])) + 1
+        self.n_items = max(max(self.cf_train_data[1]), max(self.cf_test_data[1])) + 1
         self.n_cf_train = len(self.cf_train_data[0])
         self.n_cf_test = len(self.cf_test_data[0])
 
