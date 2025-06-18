@@ -283,6 +283,10 @@ def train(args):
                 logging.info("Save model on epoch {:04d}!".format(epoch))
                 best_epoch = epoch
 
+    # save final model
+    save_model(model, args.save_dir, args.n_epoch, best_epoch)
+    logging.info("Save final model on epoch {:04d}!".format(args.n_epoch))
+
     # save metrics
     metrics_df = [epoch_list]
     metrics_cols = ["epoch_idx"]
