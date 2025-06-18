@@ -115,7 +115,7 @@ def logloss(ground_truth, prediction):
     return logloss
 
 
-def calc_metrics_at_k(cf_scores, train_user_dict, test_user_dict, user_ids, item_ids, Ks, num_negatives=100):
+def calc_metrics_at_k(cf_scores, train_user_dict, test_user_dict, user_ids, item_ids, Ks, num_negatives=300):
     '''
     Calculate precision, recall, and NDCG at K for each user with negative sampling.
     Negative sampling selects 100 items that are neither the ground truth item nor in the user's train set.
