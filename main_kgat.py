@@ -354,17 +354,27 @@ def predict(args):
 
     with open(predict_file, "w", newline="", encoding="utf-8") as f:
         csv_writer = csv.writer(f)
-        # Ghi header
+        # --- Ghi header
         header = ["user_id", "ground_truth_item"] + [f"top{i+1}" for i in range(TOP_K)]
         csv_writer.writerow(header)
-        # Ghi từng dòng
-        for idx, user_id in enumerate(user_ids):
+
+        # --- Lặp qua từng user đã mapped
+        for idx, mapped_user in enumerate(user_ids):
+            # 1. Un-map lại user về ID gốc
+            orig_user = mapped_user - data.n_entities
+
+            # 2. Lấy mảng score và chọn TOP_K item
             user_scores = cf_scores[idx]
-            top_items = user_scores.argsort()[::-1][:TOP_K]
-            gt_items = data.test_user_dict[user_id]
+            top_items = user_scores.argsort()[::-1][:TOP_K]  # indices chính là item_id gốc
+
+            # 3. Lấy danh sách ground-truth items (vẫn là ID gốc)
+            gt_items = data.test_user_dict.get(mapped_user, [])
+
+            # 4. Ghi từng dòng: mỗi ground_truth_item thành một row
             for gt_item in gt_items:
-                row = [user_id, gt_item] + top_items.tolist()
-                csv_writer.writerow(row)
+                row = [orig_user, gt_item] + top_items.tolist()
+            csv_writer.writerow(row)
+
     print(f"Đã lưu file predict.csv với top-{TOP_K} dự đoán cho từng user.")
 
 
