@@ -46,8 +46,10 @@ def evaluate(model, dataloader, Ks, device):
                     batch_user_ids, item_ids, mode="predict"
                 )  # (n_batch_users, n_items)
 
+            print(f"Batch User IDs: {batch_user_ids}")
+            print(f"Top 50 batch scores: {batch_scores[:][:50]}")
             batch_scores = batch_scores.cpu()
-            batch_metrics = calc_metrics_at_k_with_negative_sampling(
+            batch_metrics = calc_metrics_at_k(
                 batch_scores,
                 train_user_dict,
                 test_user_dict,
@@ -333,7 +335,7 @@ def predict(args):
     k_max = max(Ks)
 
     cf_scores, metrics_dict = evaluate(model, data, Ks, device)
-    np.save(args.save_dir + "cf_scores.npy", cf_scores)
+    np.save("cf_scores.npy", cf_scores)
     print(
         "CF Evaluation: Precision [{:.4f}, {:.4f}], Recall [{:.4f}, {:.4f}], NDCG [{:.4f}, {:.4f}]".format(
             metrics_dict[k_min]["precision"],
@@ -348,5 +350,5 @@ def predict(args):
 
 if __name__ == "__main__":
     args = parse_kgat_args()
-    train(args)
-    # predict(args)
+    # train(args)
+    predict(args)
