@@ -346,6 +346,26 @@ def predict(args):
             metrics_dict[k_max]["ndcg"],
         )
     )
+    
+    # --- LƯU FILE DỰ ĐOÁN ---
+    user_ids = list(data.test_user_dict.keys())  # Đảm bảo đúng thứ tự với cf_scores
+    TOP_K = 10  # Có thể thay đổi số lượng top-K tại đây
+    predict_file = "predict.csv"
+
+    with open(predict_file, "w", newline="", encoding="utf-8") as f:
+        csv_writer = csv.writer(f)
+        # Ghi header
+        header = ["user_id", "ground_truth_item"] + [f"top{i+1}" for i in range(TOP_K)]
+        csv_writer.writerow(header)
+        # Ghi từng dòng
+        for idx, user_id in enumerate(user_ids):
+            user_scores = cf_scores[idx]
+            top_items = user_scores.argsort()[::-1][:TOP_K]
+            gt_items = data.test_user_dict[user_id]
+            for gt_item in gt_items:
+                row = [user_id, gt_item] + top_items.tolist()
+                csv_writer.writerow(row)
+    print(f"Đã lưu file predict.csv với top-{TOP_K} dự đoán cho từng user.")
 
 
 if __name__ == "__main__":
