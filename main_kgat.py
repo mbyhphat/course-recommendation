@@ -46,8 +46,10 @@ def evaluate(model, dataloader, Ks, device):
                     batch_user_ids, item_ids, mode="predict"
                 )  # (n_batch_users, n_items)
 
+            print(f"Batch User IDs: {batch_user_ids}")
+            print(f"Top 50 batch scores: {batch_scores[:][:50]}")
             batch_scores = batch_scores.cpu()
-            batch_metrics = calc_metrics_at_k_with_negative_sampling(
+            batch_metrics = calc_metrics_at_k(
                 batch_scores,
                 train_user_dict,
                 test_user_dict,
