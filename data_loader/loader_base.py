@@ -17,9 +17,10 @@ class DataLoaderBase(object):
         self.pretrain_embedding_dir = args.pretrain_embedding_dir
 
         self.data_dir = os.path.join(args.data_dir, args.data_name)
-        self.train_file = os.path.join(self.data_dir, 'train.txt')
-        self.test_file = os.path.join(self.data_dir, 'test.txt')
-        self.kg_file = os.path.join(self.data_dir, "kg_final.txt")
+        self.train_file = os.path.join(self.data_dir, "train.txt")
+        self.test_file = os.path.join(self.data_dir, "val.txt")
+        self.kg_file = os.path.join(self.data_dir, "kg_final.csv")
+        self.user_file = os.path.join(self.data_dir, "user_list.csv")
 
         self.cf_train_data, self.train_user_dict = self.load_cf(self.train_file)
         self.cf_test_data, self.test_user_dict = self.load_cf(self.test_file)
@@ -28,13 +29,12 @@ class DataLoaderBase(object):
         if self.use_pretrain == 1:
             self.load_pretrained_data()
 
-
     def load_cf(self, filename):
         user = []
         item = []
         user_dict = dict()
 
-        lines = open(filename, 'r').readlines()
+        lines = open(filename, "r").readlines()
         for l in lines:
             tmp = l.strip()
             inter = [int(i) for i in tmp.split()]
@@ -52,19 +52,21 @@ class DataLoaderBase(object):
         item = np.array(item, dtype=np.int32)
         return (user, item), user_dict
 
-
     def statistic_cf(self):
         self.n_users = max(max(self.cf_train_data[0]), max(self.cf_test_data[0])) + 1
         self.n_items = max(max(self.cf_train_data[1]), max(self.cf_test_data[1])) + 1
         self.n_cf_train = len(self.cf_train_data[0])
         self.n_cf_test = len(self.cf_test_data[0])
 
-
     def load_kg(self, filename):
-        kg_data = pd.read_csv(filename, sep=' ', names=['h', 'r', 't'], engine='python')
+        kg_data = pd.read_csv(filename, sep=",", engine="python")
         kg_data = kg_data.drop_duplicates()
         return kg_data
 
+    def load_user_info(self, filename):
+        user_data = pd.read_csv(filename, sep=" ")
+        user_data = user_data.drop_duplicates()
+        return user_data
 
     def sample_pos_items_for_u(self, user_dict, user_id, n_sample_pos_items):
         pos_items = user_dict[user_id]
@@ -81,7 +83,6 @@ class DataLoaderBase(object):
                 sample_pos_items.append(pos_item_id)
         return sample_pos_items
 
-
     def sample_neg_items_for_u(self, user_dict, user_id, n_sample_neg_items):
         pos_items = user_dict[user_id]
 
@@ -95,9 +96,8 @@ class DataLoaderBase(object):
                 sample_neg_items.append(neg_item_id)
         return sample_neg_items
 
-
     def generate_cf_batch(self, user_dict, batch_size):
-        exist_users = user_dict.keys()
+        exist_users = list(user_dict.keys())
         if batch_size <= len(exist_users):
             batch_user = random.sample(exist_users, batch_size)
         else:
@@ -112,7 +112,6 @@ class DataLoaderBase(object):
         batch_pos_item = torch.LongTensor(batch_pos_item)
         batch_neg_item = torch.LongTensor(batch_neg_item)
         return batch_user, batch_pos_item, batch_neg_item
-
 
     def sample_pos_triples_for_h(self, kg_dict, head, n_sample_pos_triples):
         pos_triples = kg_dict[head]
@@ -132,8 +131,9 @@ class DataLoaderBase(object):
                 sample_pos_tails.append(tail)
         return sample_relations, sample_pos_tails
 
-
-    def sample_neg_triples_for_h(self, kg_dict, head, relation, n_sample_neg_triples, highest_neg_idx):
+    def sample_neg_triples_for_h(
+        self, kg_dict, head, relation, n_sample_neg_triples, highest_neg_idx
+    ):
         pos_triples = kg_dict[head]
 
         sample_neg_tails = []
@@ -146,11 +146,11 @@ class DataLoaderBase(object):
                 sample_neg_tails.append(tail)
         return sample_neg_tails
 
-
     def generate_kg_batch(self, kg_dict, batch_size, highest_neg_idx):
         exist_heads = kg_dict.keys()
         if batch_size <= len(exist_heads):
-            batch_head = random.sample(exist_heads, batch_size)
+            # batch_head = random.sample(exist_heads, batch_size)
+            batch_head = random.sample(list(exist_heads), batch_size)
         else:
             batch_head = [random.choice(exist_heads) for _ in range(batch_size)]
 
@@ -160,7 +160,9 @@ class DataLoaderBase(object):
             batch_relation += relation
             batch_pos_tail += pos_tail
 
-            neg_tail = self.sample_neg_triples_for_h(kg_dict, h, relation[0], 1, highest_neg_idx)
+            neg_tail = self.sample_neg_triples_for_h(
+                kg_dict, h, relation[0], 1, highest_neg_idx
+            )
             batch_neg_tail += neg_tail
 
         batch_head = torch.LongTensor(batch_head)
@@ -169,17 +171,14 @@ class DataLoaderBase(object):
         batch_neg_tail = torch.LongTensor(batch_neg_tail)
         return batch_head, batch_relation, batch_pos_tail, batch_neg_tail
 
-
     def load_pretrained_data(self):
-        pre_model = 'mf'
-        pretrain_path = '%s/%s/%s.npz' % (self.pretrain_embedding_dir, self.data_name, pre_model)
+        pre_model = "mf"
+        pretrain_path = "%s/%s.npz" % (self.pretrain_embedding_dir, pre_model)
         pretrain_data = np.load(pretrain_path)
-        self.user_pre_embed = pretrain_data['user_embed']
-        self.item_pre_embed = pretrain_data['item_embed']
+        self.user_pre_embed = pretrain_data["user_embed"]
+        self.item_pre_embed = pretrain_data["item_embed"]
 
         assert self.user_pre_embed.shape[0] == self.n_users
         assert self.item_pre_embed.shape[0] == self.n_items
         assert self.user_pre_embed.shape[1] == self.args.embed_dim
         assert self.item_pre_embed.shape[1] == self.args.embed_dim
-
-
