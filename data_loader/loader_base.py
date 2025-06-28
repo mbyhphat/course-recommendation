@@ -18,7 +18,7 @@ class DataLoaderBase(object):
 
         self.data_dir = os.path.join(args.data_dir, args.data_name)
         self.train_file = os.path.join(self.data_dir, "train.txt")
-        self.test_file = os.path.join(self.data_dir, "test_light.txt")
+        self.test_file = os.path.join(self.data_dir, "val.txt")
         self.kg_file = os.path.join(self.data_dir, "kg_final.csv")
         self.user_file = os.path.join(self.data_dir, "user_list.csv")
 
