@@ -72,32 +72,39 @@ class KGAT(nn.Module):
 
     def __init__(
         self,
-        args,
         n_users,
         n_entities,
         n_relations,
+        use_pretrain=0,
+        embed_dim=64,
+        relation_dim=64,
+        aggregation_type="bi-interaction",
+        conv_dim_list="[64, 32, 16]",
+        mess_dropout="[0.1, 0.1, 0.1]",
+        kg_l2loss_lambda=1e-5,
+        cf_l2loss_lambda=1e-5,
         A_in=None,
         user_pre_embed=None,
         item_pre_embed=None,
     ):
 
         super(KGAT, self).__init__()
-        self.use_pretrain = args.use_pretrain
+        self.use_pretrain = use_pretrain
 
         self.n_users = n_users
         self.n_entities = n_entities
         self.n_relations = n_relations
 
-        self.embed_dim = args.embed_dim
-        self.relation_dim = args.relation_dim
+        self.embed_dim = embed_dim
+        self.relation_dim = relation_dim
 
-        self.aggregation_type = args.aggregation_type
-        self.conv_dim_list = [args.embed_dim] + eval(args.conv_dim_list)
-        self.mess_dropout = eval(args.mess_dropout)
-        self.n_layers = len(eval(args.conv_dim_list))
+        self.aggregation_type = aggregation_type
+        self.conv_dim_list = [embed_dim] + eval(conv_dim_list)
+        self.mess_dropout = eval(mess_dropout)
+        self.n_layers = len(eval(conv_dim_list))
 
-        self.kg_l2loss_lambda = args.kg_l2loss_lambda
-        self.cf_l2loss_lambda = args.cf_l2loss_lambda
+        self.kg_l2loss_lambda = kg_l2loss_lambda
+        self.cf_l2loss_lambda = cf_l2loss_lambda
 
         self.entity_user_embed = nn.Embedding(
             self.n_entities + self.n_users, self.embed_dim
