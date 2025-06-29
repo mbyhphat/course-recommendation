@@ -74,7 +74,7 @@ def evaluate(
     return cf_scores, metrics_dict
 
 
-def predict(test_batch_size, train_user_dict, test_user_dict):
+def predict(train_user_dict, test_user_dict, test_batch_size=256):
     # GPU / CPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
