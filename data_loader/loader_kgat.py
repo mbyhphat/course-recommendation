@@ -80,6 +80,11 @@ class DataLoaderKGAT(DataLoaderBase):
         self.kg_train_data = pd.concat(
             [kg_data, cf2kg_train_data, inverse_cf2kg_train_data], ignore_index=True
         )
+
+        # Thêm dòng này vào cuối code tiền xử lý của bạn
+        self.kg_train_data.to_csv('unified_graph.tsv', sep='\t', header=False, index=False)
+        print("Đã lưu đồ thị hợp nhất ra file unified_graph.tsv")
+
         self.n_kg_train = len(self.kg_train_data)
 
         # construct kg dict
