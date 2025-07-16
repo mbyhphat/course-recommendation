@@ -2,6 +2,9 @@
 
 This project implements a personalized course recommendation system using collaborative filtering and knowledge graph techniques. It includes two main models (KGAT and BPRMF) for recommendation tasks and simulates real-time data ingestion using Kafka.
 
+## **System Pipeline Overview**
+<img src="image/full_pipeline.png" align="center">
+
 Below are the steps to train the models, set up streaming data, and visualize the end-to-end pipeline.
 
 ## **Model Training**
@@ -56,6 +59,3 @@ Make sure the consumer is fully started and ready to receive messages before run
 python3 kafka_producer.py
 ```
 Only do this after the consumer is ready to ensure no messages are missed.
-
-## **System Pipeline Overview**
-<img src="image/full_pipeline.png" align="center">
